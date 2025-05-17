@@ -32,7 +32,7 @@ typedef struct {
 #pragma pack(pop)
 
 
-extern void grayscale_asm(uint8_t *data, size_t pixels);
+extern void grayscale_asm(uint8_t *data, int32_t width, int32_t height);
 
 
 static void grayscale(uint8_t *data, int32_t width, int32_t height) {
@@ -121,9 +121,11 @@ int main(int argc, char **argv) {
         return EXIT_FAILURE;
     }
     fclose(f);
-
-    // Конвертация в оттенки серого
-    grayscale(pixels, width, height);
+    int use_c = (argc == 4);
+    if (use_c)
+        grayscale(pixels, width, height);
+    else
+        grayscale_asm(pixels, width, height);
 
     // Обновляем поля размеров
     bih.biSizeImage = (uint32_t)img_size;
