@@ -50,7 +50,12 @@ grayscale_asm:
     jge     .next_row
 
     ; pixel_ptr = row_ptr + x * 3
-    lea     rax, [rcx + r12*3]
+
+    ; фикс
+    mov     rax, r12
+    shl     rax, 1      ; rax = r12 * 2
+    add     rax, r12    ; rax = r12 * 3
+    add     rax, rcx    ; rax = row_ptr + x * 3
 
     ; load components: B, G, R
     movzx   eax, byte [rax]     ; eax = B
