@@ -9,33 +9,34 @@
 ;   nasm -f elf64 grayscale.asm -o grayscale.o
 ;   gcc -no-pie -Wall -Wextra -O2 lab5.c grayscale.o -o lab5
 
+section .data
+    ; constant for integer division
+    div1000:    dd 1000
+
 section .text
 global grayscale_asm
 
 ; void grayscale_asm(uint8_t *data, int32_t width, int32_t height)
-; Arguments (System V AMD64):
-;   rdi = pointer to pixel data buffer
-;   rsi = width (pixels per row)
-;   rdx = height (number of scanlines)
-;
+; System V AMD64: rdi = data ptr, rsi = width, rdx = height
+
 grayscale_asm:
-    ; preserve callee-saved registers we'll use (rbx, r12)
+    ; save callee-saved registers
     push    rbx
     push    r12
 
-    ; copy width and height to temporaries
+    ; copy args to callee-saved or temp regs
     mov     r8d, esi        ; r8d = width
     mov     r9d, edx        ; r9d = height
 
-    ; compute row_size = (width * 3 + 3) & ~3
+    ; compute row_size = (width*3 + 3) & ~3
     mov     r10d, r8d       ; r10d = width
     imul    r10d, 3         ; r10d = width * 3
-    add     r10d, 3         ; r10d += 3 for rounding up
+    add     r10d, 3         ; +3 for rounding up
     and     r10d, -4        ; align down to multiple of 4
 
-    xor     r11d, r11d      ; y = 0 (r11d)
+    xor     r11d, r11d      ; y = 0
 .outer_loop:
-    cmp     r11d, r9d       ; while y < height
+    cmp     r11d, r9d       ; if y >= height
     jge     .done
 
     ; row_ptr = data + y * row_size
@@ -44,49 +45,47 @@ grayscale_asm:
     add     rax, rdi        ; rax = data + offset
     mov     rcx, rax        ; rcx = row_ptr
 
-    xor     r12d, r12d      ; x = 0 (r12d)
+    xor     r12d, r12d      ; x = 0
 .inner_loop:
-    cmp     r12d, r8d       ; while x < width
+    cmp     r12d, r8d       ; if x >= width
     jge     .next_row
 
-    ; pixel_ptr = row_ptr + x * 3
+    ; pixel_ptr = rcx + x*3 → in RSI
+    mov     rax, r12        ; rax = x
+    shl     rax, 1          ; rax = x*2
+    add     rax, r12        ; rax = x*3
+    add     rax, rcx        ; rax = row_ptr + x*3
+    mov     rsi, rax        ; rsi = pixel_ptr
 
-    ; фикс
-    mov     rax, r12
-    shl     rax, 1      ; rax = r12 * 2
-    add     rax, r12    ; rax = r12 * 3
-    add     rax, rcx    ; rax = row_ptr + x * 3
-
-    ; load components: B, G, R
-    movzx   eax, byte [rax]     ; eax = B
-    movzx   ebx, byte [rax+1]   ; ebx = G
-    movzx   ecx, byte [rax+2]   ; ecx = R
+    ; load B, G, R components
+    movzx   eax, byte [rsi]     ; eax = B
+    movzx   edx, byte [rsi+1]   ; edx = G
+    movzx   ebx, byte [rsi+2]   ; ebx = R
 
     ; compute gray = (299*R + 587*G + 114*B + 500) / 1000
-    imul    ecx, 299             ; ecx = R*299
-    imul    ebx, 587             ; ebx = G*587
-    imul    eax, 114             ; eax = B*114
-    add     ecx, ebx             ; ecx += G*587
-    add     ecx, eax             ; ecx += B*114
-    add     ecx, 500             ; rounding
-    mov     ebx, 1000            ; divisor
-    xor     edx, edx             ; clear edx for DIV
-    div     ebx                  ; eax = gray (quotient)
+    imul    ebx, 299            ; ebx = R*299
+    imul    edx, 587            ; edx = G*587
+    imul    eax, 114            ; eax = B*114
+    add     ebx, edx            ; ebx += G*587
+    add     ebx, eax            ; ebx += B*114
+    add     ebx, 500            ; rounding
+    mov     eax, ebx            ; numerator → eax
+    xor     edx, edx            ; edx:eax → dividend
+    div     dword [rel div1000] ; eax = gray
 
-    ; store gray back to B, G, R
-    mov     byte [rax], al
-    mov     byte [rax+1], al
-    mov     byte [rax+2], al
+    ; store gray back into B, G, R
+    mov     [rsi], al
+    mov     [rsi+1], al
+    mov     [rsi+2], al
 
-    inc     r12                 ; x++
+    inc     r12d                ; x++
     jmp     .inner_loop
 
 .next_row:
-    inc     r11                 ; y++
+    inc     r11d                ; y++
     jmp     .outer_loop
 
 .done:
-    ; restore registers and return
     pop     r12
     pop     rbx
     ret
