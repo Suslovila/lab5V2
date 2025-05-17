@@ -51,6 +51,9 @@ static void grayscale(uint8_t *data, int32_t width, int32_t height) {
 }
 
 int main(int argc, char **argv) {
+
+
+
     if (argc != 3 && argc != 4) {
         fprintf(stderr, "Usage: %s <input.bmp> <output.bmp>\n", argv[0]);
         return EXIT_FAILURE;
@@ -124,8 +127,12 @@ int main(int argc, char **argv) {
     int use_c = (argc == 4);
     if (use_c)
         grayscale(pixels, width, height);
-    else
+    else {
+        printf("nasm version");
         grayscale_asm(pixels, width, height);
+    }
+
+    printf("nasm version222222");
 
     // Обновляем поля размеров
     bih.biSizeImage = (uint32_t)img_size;
