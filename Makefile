@@ -7,7 +7,7 @@ LDFLAGS =
 all: lab5
 
 gray.o: lab5V1.asm
-	$(NASM) -f elf64 $< -o $@
+	$(NASM) -f win64 $< -o $@
 
 main.o: main.c
 	$(CC) $(CFLAGS) -c $< -o $@

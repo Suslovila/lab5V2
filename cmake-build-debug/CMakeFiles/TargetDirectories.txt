@@ -1,3 +1,3 @@
-C:/Users/Илья/Documents/asm_lab5/cmake-build-debug/CMakeFiles/asm_lab5.dir
-C:/Users/Илья/Documents/asm_lab5/cmake-build-debug/CMakeFiles/edit_cache.dir
-C:/Users/Илья/Documents/asm_lab5/cmake-build-debug/CMakeFiles/rebuild_cache.dir
+C:/Users/Илья/Documents/asm_lab5V2/cmake-build-debug/CMakeFiles/asm_lab5.dir
+C:/Users/Илья/Documents/asm_lab5V2/cmake-build-debug/CMakeFiles/edit_cache.dir
+C:/Users/Илья/Documents/asm_lab5V2/cmake-build-debug/CMakeFiles/rebuild_cache.dir

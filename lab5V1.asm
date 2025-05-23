@@ -8,19 +8,26 @@
 ; Build and link:
 ;   nasm -f elf64 grayscale.asm -o grayscale.o
 ;   gcc -no-pie -Wall -Wextra -O2 lab5.c grayscale.o -o lab5
+global grayscale_asm
+
+extern printf, scanf, fopen, fprintf, fclose
+extern fabs, cos
 
 section .data
     ; constant for integer division
     div1000:    dd 1000
+    fmt_errarg: db      "Usinnnng %d", 10,0
 
 section .text
-global grayscale_asm
+
 
 ; void grayscale_asm(uint8_t *data, int32_t width, int32_t height)
-; System V AMD64: rdi = data ptr, rsi = width, rdx = height
+    ; System V AMD64: rdi = data ptr, rsi = width, rdx = height
 
 grayscale_asm:
     ; save callee-saved registers
+
+
     push    rbx
     push    r12
 
