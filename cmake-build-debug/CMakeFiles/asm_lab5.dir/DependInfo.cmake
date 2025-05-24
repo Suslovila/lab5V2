@@ -8,6 +8,7 @@ set(CMAKE_DEPENDS_LANGUAGES
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
+  "C:/Users/Илья/Documents/asm_lab5V2/ZhenyaMain.c" "CMakeFiles/asm_lab5.dir/ZhenyaMain.c.obj" "gcc" "CMakeFiles/asm_lab5.dir/ZhenyaMain.c.obj.d"
   "C:/Users/Илья/Documents/asm_lab5V2/main.c" "CMakeFiles/asm_lab5.dir/main.c.obj" "gcc" "CMakeFiles/asm_lab5.dir/main.c.obj.d"
   )
 

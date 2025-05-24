@@ -1,98 +1,95 @@
-; grayscale.asm — NASM x86-64 implementation of BMP grayscale conversion routine
-; Integrate with C main (lab5.c):
-; 1) Remove or comment-out the static "grayscale_c" in lab5.c
-; 2) Declare extern:
-;      extern void grayscale_asm(uint8_t *data, int32_t width, int32_t height);
-; 3) Replace call to grayscale_c with grayscale_asm(pixels, width, height);
-;
-; Build and link:
-;   nasm -f elf64 grayscale.asm -o grayscale.o
-;   gcc -no-pie -Wall -Wextra -O2 lab5.c grayscale.o -o lab5
-global grayscale_asm
+; grayscale.asm — корректная версия (System V AMD64, nasm -f elf64)
+; extern void grayscale_asm(uint8_t *data, int32_t width, int32_t height);
 
-extern printf, scanf, fopen, fprintf, fclose
-extern fabs, cos
+        global  grayscale_asm
 
-section .data
-    ; constant for integer division
-    div1000:    dd 1000
-    fmt_errarg: db      "Usinnnng %d", 10,0
+        section .text
 
-section .text
-
-
-; void grayscale_asm(uint8_t *data, int32_t width, int32_t height)
-    ; System V AMD64: rdi = data ptr, rsi = width, rdx = height
-
+; rdi = data*, rsi = width, rdx = height
 grayscale_asm:
-    ; save callee-saved registers
+        push    rbp
+        mov     rbp, rsp
+        sub     rsp, 32              ; 16-байтовое выравнивание + рабочий буфер
 
+        push    rbx
+        push    rdi
+        push    r11
+        push    r12
+        push    r13
+        push    r14
+        push    r15
 
-    push    rbx
-    push    r12
+;        ; -------- сохранить аргументы --------
+        mov     r13, rcx             ; r13 = base ptr  (data)
+        mov     ebx, edx             ; ebx = width     (non-volatile)
+        mov     r12d, r8d            ; r12d = height   (non-volatile)
 
-    ; copy args to callee-saved or temp regs
-    mov     r8d, esi        ; r8d = width
-    mov     r9d, edx        ; r9d = height
+        ; -------- row_size = ((width*3+3)&~3) --------
+        mov     eax, ebx
+        imul    eax, 3
+        add     eax, 3
+        and     eax, -4
+        mov     r14d, eax            ; r14d = row_size
 
-    ; compute row_size = (width*3 + 3) & ~3
-    mov     r10d, r8d       ; r10d = width
-    imul    r10d, 3         ; r10d = width * 3
-    add     r10d, 3         ; +3 for rounding up
-    and     r10d, -4        ; align down to multiple of 4
+        xor     r15d, r15d           ; y = 0
+.outer_row:
+        cmp     r15d, r12d
+        jge     .done
 
-    xor     r11d, r11d      ; y = 0
-.outer_loop:
-    cmp     r11d, r9d       ; if y >= height
-    jge     .done
+        ; rsi = row_ptr = data + y*row_size
+        mov     eax, r14d
+        imul    eax, r15d
+        lea     rsi, [r13 + rax]
+;
+        xor     r11d, r11d           ; x = 0
+.inner_px:
+        cmp     r11d, ebx
+        jge     .next_row
+;
+;        ; rdi = pixel_ptr = row_ptr + x*3
+        mov     rdi, r11
+        add     rdi, r11
+        add     rdi, r11
+        add     rdi, rsi
+;;
+;        ; --- load B,G,R ---
+        movzx   eax, byte [rdi]      ; B
+        movzx   edx, byte [rdi+1]    ; G
+        movzx   ecx, byte [rdi+2]    ; R
+;
+        imul    eax, 114             ; B*114
+        imul    edx, 587             ; G*587
+        imul    ecx, 299             ; R*299
+        add     eax, edx
+        add     eax, ecx
+        add     eax, 500             ; +0.5 for rounding
 
-    ; row_ptr = data + y * row_size
-    mov     rax, r10        ; rax = row_size
-    imul    rax, r11        ; rax = row_size * y
-    add     rax, rdi        ; rax = data + offset
-    mov     rcx, rax        ; rcx = row_ptr
+        xor     edx, edx             ; edx:eax / 1000
+        mov     ecx, 1000
+        div     ecx                  ; eax = gray
 
-    xor     r12d, r12d      ; x = 0
-.inner_loop:
-    cmp     r12d, r8d       ; if x >= width
-    jge     .next_row
+        ; --- store gray ---
+        mov     [rdi],    al
+        mov     [rdi+1],  al
+        mov     [rdi+2],  al
 
-    ; pixel_ptr = rcx + x*3 → in RSI
-    mov     rax, r12        ; rax = x
-    shl     rax, 1          ; rax = x*2
-    add     rax, r12        ; rax = x*3
-    add     rax, rcx        ; rax = row_ptr + x*3
-    mov     rsi, rax        ; rsi = pixel_ptr
-
-    ; load B, G, R components
-    movzx   eax, byte [rsi]     ; eax = B
-    movzx   edx, byte [rsi+1]   ; edx = G
-    movzx   ebx, byte [rsi+2]   ; ebx = R
-
-    ; compute gray = (299*R + 587*G + 114*B + 500) / 1000
-    imul    ebx, 299            ; ebx = R*299
-    imul    edx, 587            ; edx = G*587
-    imul    eax, 114            ; eax = B*114
-    add     ebx, edx            ; ebx += G*587
-    add     ebx, eax            ; ebx += B*114
-    add     ebx, 500            ; rounding
-    mov     eax, ebx            ; numerator → eax
-    xor     edx, edx            ; edx:eax → dividend
-    div     dword [rel div1000] ; eax = gray
-
-    ; store gray back into B, G, R
-    mov     [rsi], al
-    mov     [rsi+1], al
-    mov     [rsi+2], al
-
-    inc     r12d                ; x++
-    jmp     .inner_loop
+        inc     r11d
+        jmp     .inner_px
 
 .next_row:
-    inc     r11d                ; y++
-    jmp     .outer_loop
+        inc     r15d
+        jmp     .outer_row
 
 .done:
-    pop     r12
-    pop     rbx
-    ret
+        pop     r15
+        pop     r14
+        pop     r13
+        pop     r12
+        pop     r11
+        pop     rdi
+        pop     rbx
+
+        add     rsp, 32
+        mov     rsp, rbp
+        pop     rbp
+        ret

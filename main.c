@@ -52,8 +52,6 @@ static void grayscale(uint8_t *data, int32_t width, int32_t height) {
 
 int main(int argc, char **argv) {
 
-
-
     if (argc != 3 && argc != 4) {
         fprintf(stderr, "Usage: %s <input.bmp> <output.bmp>\n", argv[0]);
         return EXIT_FAILURE;

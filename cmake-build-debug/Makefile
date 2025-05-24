@@ -128,6 +128,30 @@ asm_lab5/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\asm_lab5.dir\build.make CMakeFiles/asm_lab5.dir/build
 .PHONY : asm_lab5/fast
 
+ZhenyaMain.obj: ZhenyaMain.c.obj
+.PHONY : ZhenyaMain.obj
+
+# target to build an object file
+ZhenyaMain.c.obj:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\asm_lab5.dir\build.make CMakeFiles/asm_lab5.dir/ZhenyaMain.c.obj
+.PHONY : ZhenyaMain.c.obj
+
+ZhenyaMain.i: ZhenyaMain.c.i
+.PHONY : ZhenyaMain.i
+
+# target to preprocess a source file
+ZhenyaMain.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\asm_lab5.dir\build.make CMakeFiles/asm_lab5.dir/ZhenyaMain.c.i
+.PHONY : ZhenyaMain.c.i
+
+ZhenyaMain.s: ZhenyaMain.c.s
+.PHONY : ZhenyaMain.s
+
+# target to generate assembly for a file
+ZhenyaMain.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\asm_lab5.dir\build.make CMakeFiles/asm_lab5.dir/ZhenyaMain.c.s
+.PHONY : ZhenyaMain.c.s
+
 main.obj: main.c.obj
 .PHONY : main.obj
 
@@ -161,6 +185,9 @@ help:
 	@echo ... edit_cache
 	@echo ... rebuild_cache
 	@echo ... asm_lab5
+	@echo ... ZhenyaMain.obj
+	@echo ... ZhenyaMain.i
+	@echo ... ZhenyaMain.s
 	@echo ... main.obj
 	@echo ... main.i
 	@echo ... main.s

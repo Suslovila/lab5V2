@@ -76,6 +76,9 @@
 				</MakeCommands>
 			</Target>
 		</Build>
+		<Unit filename="C:/Users/Илья/Documents/asm_lab5V2/ZhenyaMain.c">
+			<Option target="asm_lab5"/>
+		</Unit>
 		<Unit filename="C:/Users/Илья/Documents/asm_lab5V2/main.c">
 			<Option target="asm_lab5"/>
 		</Unit>

@@ -1,4 +1,6 @@
 file(REMOVE_RECURSE
+  "CMakeFiles/asm_lab5.dir/ZhenyaMain.c.obj"
+  "CMakeFiles/asm_lab5.dir/ZhenyaMain.c.obj.d"
   "CMakeFiles/asm_lab5.dir/main.c.obj"
   "CMakeFiles/asm_lab5.dir/main.c.obj.d"
   "asm_lab5.exe"
