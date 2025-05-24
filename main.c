@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <time.h>
+#include <windows.h>
 
 #pragma pack(push,1)
 typedef struct {
@@ -12,7 +14,7 @@ typedef struct {
     uint16_t bfReserved1;
     uint16_t bfReserved2;
     uint32_t bfOffBits;     // смещение до пикселей
-} BITMAPFILEHEADER;
+} CUSTOMBITMAPFILEHEADER;
 #pragma pack(pop)
 
 #pragma pack(push,1)
@@ -28,9 +30,24 @@ typedef struct {
     int32_t  biYPelsPerMeter;
     uint32_t biClrUsed;
     uint32_t biClrImportant;
-} BITMAPINFOHEADER;
+} CUSTOMBITMAPINFOHEADER;
 #pragma pack(pop)
 
+
+static double wall_time_ms(void) {
+#ifdef _WIN32
+    static LARGE_INTEGER freq = {0};
+    if (!freq.QuadPart)
+        QueryPerformanceFrequency(&freq);
+    LARGE_INTEGER now;
+    QueryPerformanceCounter(&now);
+    return (double)now.QuadPart * 1000.0 / freq.QuadPart;
+#else
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return ts.tv_sec * 1000.0 + ts.tv_nsec / 1e6;
+#endif
+}
 
 extern void grayscale_asm(uint8_t *data, int32_t width, int32_t height);
 
@@ -66,9 +83,9 @@ int main(int argc, char **argv) {
         return EXIT_FAILURE;
     }
 
-    BITMAPFILEHEADER bfh;
+    CUSTOMBITMAPFILEHEADER bfh;
     if (fread(&bfh, sizeof bfh, 1, f) != 1) {
-        fprintf(stderr, "Error: failed to read BITMAPFILEHEADER\n");
+        fprintf(stderr, "Error: failed to read CUSTOMBITMAPFILEHEADER\n");
         fclose(f);
         return EXIT_FAILURE;
     }
@@ -79,9 +96,9 @@ int main(int argc, char **argv) {
         return EXIT_FAILURE;
     }
 
-    BITMAPINFOHEADER bih;
+    CUSTOMBITMAPINFOHEADER bih;
     if (fread(&bih, sizeof bih, 1, f) != 1) {
-        fprintf(stderr, "Error: failed to read BITMAPINFOHEADER\n");
+        fprintf(stderr, "Error: failed to read CUSTOMBITMAPINFOHEADER\n");
         fclose(f);
         return EXIT_FAILURE;
     }
@@ -123,12 +140,20 @@ int main(int argc, char **argv) {
     }
     fclose(f);
     int use_c = (argc == 4);
+
+    double t0 = wall_time_ms();
+
     if (use_c)
         grayscale(pixels, width, height);
     else {
         printf("nasm version");
         grayscale_asm(pixels, width, height);
     }
+
+    double t1 = wall_time_ms();
+
+    double elapsed_ms = (double)(t1 - t0) * 1000.0 / CLOCKS_PER_SEC;
+    printf("Processing time: %.3f ms\n", elapsed_ms);
 
     printf("nasm version222222");
 
